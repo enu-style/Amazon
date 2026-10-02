@@ -17,7 +17,7 @@ export const ORDER_STATUS = {
 // Payment Statuses
 export const PAYMENT_STATUS = {
   PENDING: "PENDING",
-  COMPLETED: "COMPLETED",
+  PAID: "PAID",
   FAILED: "FAILED",
   REFUNDED: "REFUNDED",
 };
@@ -33,7 +33,8 @@ export const JWT_REFRESH_EXPIRE = "30d";
 
 // Password Requirements
 export const PASSWORD_MIN_LENGTH = 8;
-export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+export const PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 // Validation Limits
 export const LIMITS = {

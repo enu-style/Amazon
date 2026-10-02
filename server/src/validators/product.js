@@ -12,6 +12,7 @@ export const createProductSchema = z.object({
   categoryId: z.string().min(1),
   images: z.array(z.string().url()).optional().default([]),
   rating: z.coerce.number().min(0).max(5).optional().default(0),
+  isActive: z.boolean().optional().default(true),
 });
 
 export const updateProductSchema = z.object({
@@ -26,4 +27,5 @@ export const updateProductSchema = z.object({
   categoryId: z.string().min(1).optional(),
   images: z.array(z.string().url()).optional(),
   rating: z.coerce.number().min(0).max(5).optional(),
+  isActive: z.boolean().optional(),
 });

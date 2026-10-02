@@ -23,7 +23,7 @@ export const useNotification = () => {
       // This will be implemented when we set up toast functionality
       console.log(`[${type.toUpperCase()}] ${message}`);
     },
-    [dispatch]
+    [dispatch],
   );
 
   return { notify };
@@ -134,14 +134,15 @@ export const useLocalStorage = (key, initialValue) => {
   const setValue = useCallback(
     (value) => {
       try {
-        const valueToStore = value instanceof Function ? value(storedValue) : value;
+        const valueToStore =
+          value instanceof Function ? value(storedValue) : value;
         setStoredValue(valueToStore);
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       } catch (error) {
         console.error(error);
       }
     },
-    [key, storedValue]
+    [key, storedValue],
   );
 
   return [storedValue, setValue];

@@ -29,20 +29,27 @@ enum PaymentStatus {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
+  id           String    @id @default(cuid())
+  email        String    @unique
   passwordHash String
   firstName    String
   lastName     String
-  role         Role          @default(CUSTOMER)
-  isActive     Boolean       @default(true)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  cart         Cart?
-  wishlist     Wishlist?
-  addresses    Address[]
-  orders       Order[]
-  reviews      Review[]
+  phone        String?
+  avatar       String?
+  role         Role      @default(CUSTOMER)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  cart      Cart?
+  wishlist  Wishlist?
+  addresses Address[]
+  orders    Order[]
+  reviews   Review[]
+
+  @@index([role])
+  @@index([email])
 }
 
 model Category {
@@ -51,35 +58,46 @@ model Category {
   slug        String    @unique
   description String?
   image       String?
+  isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  products    Product[]
+
+  // Relations
+  products Product[]
+
+  @@index([slug])
 }
 
 model Product {
-  id            String        @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String
-  slug          String        @unique
+  slug          String    @unique
   description   String
-  price         Decimal       @db.Decimal(10, 2)
-  discountPrice Decimal?      @db.Decimal(10, 2)
-  stock         Int           @default(0)
-  sku           String        @unique
+  price         Decimal   @db.Decimal(10, 2)
+  discountPrice Decimal?  @db.Decimal(10, 2)
+  stock         Int       @default(0)
+  sku           String    @unique
   brand         String
+  isActive      Boolean   @default(true)
   categoryId    String
-  category      Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  rating        Float     @default(0)
+  reviewCount   Int       @default(0)
+  soldCount     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   images        ProductImage[]
   reviews       Review[]
   wishlistItems WishlistItem[]
   cartItems     CartItem[]
   orderItems    OrderItem[]
-  rating        Float         @default(0)
-  reviewCount   Int           @default(0)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
 
   @@index([categoryId])
   @@index([brand])
+  @@index([slug])
+  @@index([isActive])
 }
 
 model ProductImage {
@@ -97,33 +115,44 @@ model ProductImage {
 model Cart {
   id        String     @id @default(cuid())
   userId    String     @unique
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-  items     CartItem[]
+
+  // Relations
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@index([userId])
 }
 
 model CartItem {
   id        String   @id @default(cuid())
   cartId    String
-  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Relations
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
   @@unique([cartId, productId])
   @@index([cartId])
+  @@index([productId])
 }
 
 model Wishlist {
   id        String         @id @default(cuid())
   userId    String         @unique
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
-  items     WishlistItem[]
+
+  // Relations
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items WishlistItem[]
+
+  @@index([userId])
 }
 
 model WishlistItem {
@@ -140,69 +169,89 @@ model WishlistItem {
 }
 
 model Address {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fullName    String
-  line1       String
-  line2       String?
-  city        String
-  state       String
-  postalCode  String
-  country     String
-  phone       String?
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  orders      Order[]
+  id         String   @id @default(cuid())
+  userId     String
+  fullName   String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String
+  phone      String?
+  email      String?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
 
   @@index([userId])
 }
 
 model Order {
-  id              String        @id @default(cuid())
-  userId          String
-  user            User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  id                String        @id @default(cuid())
+  userId            String
   shippingAddressId String?
-  shippingAddress Address?     @relation(fields: [shippingAddressId], references: [id], onDelete: SetNull)
+  status            OrderStatus   @default(PENDING)
+  paymentStatus     PaymentStatus @default(PENDING)
+  stripePaymentId   String?
+  subtotal          Decimal       @db.Decimal(10, 2)
+  shippingFee       Decimal       @db.Decimal(10, 2) @default(0)
+  tax               Decimal       @db.Decimal(10, 2) @default(0)
+  discount          Decimal       @db.Decimal(10, 2) @default(0)
+  total             Decimal       @db.Decimal(10, 2)
+  notes             String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  user            User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  shippingAddress Address?   @relation(fields: [shippingAddressId], references: [id], onDelete: SetNull)
   items           OrderItem[]
-  status          OrderStatus   @default(PENDING)
-  paymentStatus   PaymentStatus @default(PENDING)
-  subtotal        Decimal       @db.Decimal(10, 2)
-  shippingFee     Decimal       @db.Decimal(10, 2)
-  tax             Decimal       @db.Decimal(10, 2)
-  total           Decimal       @db.Decimal(10, 2)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
 
   @@index([userId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
 }
 
 model OrderItem {
   id        String   @id @default(cuid())
   orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
   quantity  Int
   price     Decimal  @db.Decimal(10, 2)
+  discount  Decimal  @db.Decimal(10, 2) @default(0)
   createdAt DateTime @default(now())
+
+  // Relations
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
 
   @@index([orderId])
   @@index([productId])
 }
 
+// Review Model
 model Review {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  rating    Int
+  rating    Int      @db.SmallInt
+  title     String?
   comment   String
+  helpful   Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@unique([userId, productId])
   @@index([productId])
+  @@index([rating])
 }

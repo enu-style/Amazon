@@ -199,7 +199,7 @@ JWT_EXPIRE="7d"
 
 # Stripe
 STRIPE_SECRET_KEY="sk_test_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."
+STRIPE_WEBHOOK_SECRET="whsec_..." # provided by Stripe CLI during local testing
 
 # Cloudinary
 CLOUDINARY_CLOUD_NAME="your_cloud_name"
@@ -269,6 +269,7 @@ POST /api/auth/register          - Create new account
 POST /api/auth/login             - Login user
 POST /api/auth/logout            - Logout user
 GET  /api/auth/me                - Get current user
+PATCH /api/auth/me               - Update current user's profile
 POST /api/auth/refresh          - Refresh JWT token
 ```
 
@@ -310,12 +311,23 @@ POST   /api/wishlist             - Add product to wishlist
 DELETE /api/wishlist/:productId  - Remove from wishlist
 ```
 
+### Account & Addresses
+
+```
+GET    /api/addresses            - List current user's saved addresses
+POST   /api/addresses            - Save an address
+PATCH  /api/addresses/:id        - Update an owned address or set it as default
+DELETE /api/addresses/:id        - Remove an owned address
+```
+
 ### Orders
 
 ```
 POST   /api/orders               - Create order
 GET    /api/orders               - Get user's orders
 GET    /api/orders/:id           - Get order details
+POST   /api/orders/:id/checkout-session - Create or reuse a Stripe Checkout session
+POST   /api/payments/webhook     - Verify Stripe events and update payment status
 PUT    /api/orders/:id/status    - Update order status (Admin)
 ```
 
@@ -400,14 +412,15 @@ npm test
 
 ## 💳 Payment Integration
 
-Stripe is integrated for payment processing:
+Stripe Checkout uses server-calculated order amounts. Orders remain pending until a signed Stripe webhook verifies payment; successful payment marks the order paid and confirms pending orders. Set test credentials in `server/.env` before trying checkout.
 
-1. User proceeds to checkout
-2. Frontend creates Stripe payment intent
-3. User enters card details
-4. Stripe webhook confirms payment
-5. Order is marked as paid
-6. Order status updated to CONFIRMED
+For local webhook testing, install and authenticate the Stripe CLI, then run:
+
+```bash
+stripe listen --forward-to localhost:5000/api/payments/webhook
+```
+
+Copy the printed `whsec_...` value into `STRIPE_WEBHOOK_SECRET` in `server/.env`, add your Stripe test secret as `STRIPE_SECRET_KEY`, and restart the backend. Use Stripe's documented test card numbers in Checkout; never use live keys for local testing.
 
 ## 📸 Image Management
 

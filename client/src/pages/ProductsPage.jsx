@@ -1,13 +1,92 @@
-const products = [
-  { name: "AeroSound Pro", price: 129, rating: 4.8 },
-  { name: "Nova Lamp", price: 54, rating: 4.6 },
-  { name: "Urban Backpack", price: 72, rating: 4.7 },
-  { name: "PureClean Bottle", price: 28, rating: 4.9 },
-  { name: "Zen Charger", price: 39, rating: 4.5 },
-  { name: "Summit Speaker", price: 94, rating: 4.7 },
-];
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import ProductCard from "../components/ProductCard";
+import api from "../services/api";
 
 export default function ProductsPage() {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("featured");
+  const [loading, setLoading] = useState(true);
+
+  const handleAddToCart = async (product) => {
+    try {
+      if (!localStorage.getItem("shopsphere_token")) {
+        window.location.href = "/login";
+        return;
+      }
+
+      await api.post("/cart/items", { productId: product.id, quantity: 1 });
+    } catch (error) {
+      console.error("Failed to add product to cart:", error);
+    }
+  };
+
+  const handleToggleWishlist = async (product) => {
+    try {
+      if (!localStorage.getItem("shopsphere_token")) {
+        window.location.href = "/login";
+        return;
+      }
+
+      await api.post("/wishlist", { productId: product.id });
+    } catch (error) {
+      console.error("Failed to update wishlist:", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [productsResponse, categoriesResponse] = await Promise.all([
+          api.get("/products"),
+          api.get("/categories"),
+        ]);
+
+        setProducts(productsResponse.data?.data?.products || []);
+        setCategories(categoriesResponse.data?.data?.categories || []);
+      } catch (error) {
+        console.error("Failed to load products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    const normalizedQuery = search.trim().toLowerCase();
+    const items = products.filter((product) => {
+      const matchesCategory =
+        selectedCategory === "all" ||
+        product.category?.slug === selectedCategory ||
+        product.categoryId === selectedCategory;
+
+      const matchesSearch =
+        !normalizedQuery ||
+        [product.name, product.brand, product.description]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedQuery);
+
+      return matchesCategory && matchesSearch;
+    });
+
+    switch (sortBy) {
+      case "price_asc":
+        return [...items].sort((a, b) => Number(a.price) - Number(b.price));
+      case "price_desc":
+        return [...items].sort((a, b) => Number(b.price) - Number(a.price));
+      case "rating":
+        return [...items].sort((a, b) => Number(b.rating) - Number(a.rating));
+      default:
+        return items;
+    }
+  }, [products, search, selectedCategory, sortBy]);
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -16,13 +95,23 @@ export default function ProductsPage() {
             <p className="text-sm text-slate-500">Browse products</p>
             <h1 className="text-3xl font-bold tracking-tight">All products</h1>
           </div>
-          <div className="flex flex-wrap gap-3 text-sm">
-            <button className="rounded-full border border-slate-200 px-3 py-2">
-              Filter
-            </button>
-            <button className="rounded-full border border-slate-200 px-3 py-2">
-              Sort: Featured
-            </button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search products..."
+              className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-orange-400"
+            />
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value)}
+              className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-orange-400"
+            >
+              <option value="featured">Featured</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="rating">Top Rated</option>
+            </select>
           </div>
         </div>
       </div>
@@ -35,61 +124,58 @@ export default function ProductsPage() {
               <p className="mb-2 font-medium">Category</p>
               <div className="space-y-2">
                 <label className="flex items-center gap-2">
-                  <input type="checkbox" /> Electronics
+                  <input
+                    type="radio"
+                    name="category"
+                    checked={selectedCategory === "all"}
+                    onChange={() => setSelectedCategory("all")}
+                  />
+                  All
                 </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" /> Home
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" /> Fashion
-                </label>
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 font-medium">Price</p>
-              <input type="range" className="w-full" />
-            </div>
-            <div>
-              <p className="mb-2 font-medium">Rating</p>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="rating" /> 4+
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="rating" /> 3+
-                </label>
+                {categories.map((category) => (
+                  <label key={category.id} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="category"
+                      checked={selectedCategory === category.slug}
+                      onChange={() => setSelectedCategory(category.slug)}
+                    />
+                    {category.name}
+                  </label>
+                ))}
               </div>
             </div>
           </div>
         </aside>
 
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {products.map((product) => (
-            <article
-              key={product.name}
-              className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
-            >
-              <div className="h-52 bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200" />
-              <div className="p-4">
-                <div className="flex items-center justify-between text-sm text-amber-500">
-                  <span>★★★★★</span>
-                  <span className="text-slate-500">{product.rating}</span>
-                </div>
-                <h3 className="mt-2 font-semibold text-slate-900">
-                  {product.name}
-                </h3>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-xl font-bold text-slate-900">
-                    ${product.price}
-                  </span>
-                  <button className="rounded-lg bg-orange-500 px-3 py-2 text-sm font-semibold text-white">
-                    Add
-                  </button>
-                </div>
+        {loading ? (
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {[...Array(6)].map((_, index) => (
+              <div
+                key={index}
+                className="h-80 animate-pulse rounded-2xl bg-slate-200"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredProducts.length ? (
+              filteredProducts.map((product) => (
+                <Link key={product.id} to={`/products/${product.id}`}>
+                  <ProductCard
+                    product={product}
+                    onAddToCart={handleAddToCart}
+                    onToggleWishlist={handleToggleWishlist}
+                  />
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
+                No products match your current filters.
               </div>
-            </article>
-          ))}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

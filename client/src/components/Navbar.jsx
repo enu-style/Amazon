@@ -1,3 +1,4 @@
+import { useSelector } from "react-redux";
 import { NavLink } from "react-router-dom";
 
 const navItems = [
@@ -9,6 +10,8 @@ const navItems = [
 ];
 
 export default function Navbar() {
+  const { user, token } = useSelector((state) => state.auth);
+
   return (
     <header className="border-b border-slate-200 bg-white shadow-sm">
       <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
@@ -42,18 +45,42 @@ export default function Navbar() {
           </div>
 
           <nav className="hidden items-center gap-5 text-sm text-slate-600 lg:flex">
-            <NavLink to="/login" className="hover:text-slate-900">
-              Login
-            </NavLink>
-            <NavLink to="/orders" className="hover:text-slate-900">
-              Orders
-            </NavLink>
-            <NavLink to="/wishlist" className="hover:text-slate-900">
-              Wishlist
-            </NavLink>
-            <NavLink to="/cart" className="hover:text-slate-900">
-              Cart (0)
-            </NavLink>
+            {token ? (
+              <>
+                <span className="font-medium text-slate-700">
+                  Hi, {user?.firstName || "there"}
+                </span>
+                <NavLink to="/account" className="hover:text-slate-900">
+                  Account
+                </NavLink>
+                {user?.role === "ADMIN" && (
+                  <NavLink to="/admin" className="hover:text-slate-900">
+                    Admin
+                  </NavLink>
+                )}
+                <NavLink to="/orders" className="hover:text-slate-900">
+                  Orders
+                </NavLink>
+                <NavLink to="/wishlist" className="hover:text-slate-900">
+                  Wishlist
+                </NavLink>
+                <NavLink to="/cart" className="hover:text-slate-900">
+                  Cart (0)
+                </NavLink>
+              </>
+            ) : (
+              <>
+                <NavLink to="/login" className="hover:text-slate-900">
+                  Login
+                </NavLink>
+                <NavLink to="/register" className="hover:text-slate-900">
+                  Register
+                </NavLink>
+                <NavLink to="/cart" className="hover:text-slate-900">
+                  Cart (0)
+                </NavLink>
+              </>
+            )}
           </nav>
 
           <button className="rounded-md border border-slate-200 p-2 text-sm font-medium text-slate-700 lg:hidden">

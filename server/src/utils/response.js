@@ -1,5 +1,10 @@
 // Standard response format
-export const successResponse = (res, data, message = "Success", statusCode = 200) => {
+export const successResponse = (
+  res,
+  data,
+  message = "Success",
+  statusCode = 200,
+) => {
   return res.status(statusCode).json({
     success: true,
     message,
@@ -7,7 +12,12 @@ export const successResponse = (res, data, message = "Success", statusCode = 200
   });
 };
 
-export const errorResponse = (res, message = "An error occurred", statusCode = 500, errors = null) => {
+export const errorResponse = (
+  res,
+  message = "An error occurred",
+  statusCode = 500,
+  errors = null,
+) => {
   return res.status(statusCode).json({
     success: false,
     message,
@@ -16,7 +26,14 @@ export const errorResponse = (res, message = "An error occurred", statusCode = 5
 };
 
 // Paginated response
-export const paginatedResponse = (res, data, total, page, limit, statusCode = 200) => {
+export const paginatedResponse = (
+  res,
+  data,
+  total,
+  page,
+  limit,
+  statusCode = 200,
+) => {
   return res.status(statusCode).json({
     success: true,
     data,
@@ -37,8 +54,6 @@ export const sendSuccess = (
   message = "Success",
 ) => {
   return successResponse(res, data, message, statusCode);
-};
-  });
 };
 
 export const sendError = (res, statusCode, message, details = null) => {

@@ -6,6 +6,7 @@ import {
   updateProduct,
   deleteProduct,
 } from "../controllers/productController.js";
+import { createProductReview } from "../controllers/reviewController.js";
 import { protect, authorize } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import {
@@ -16,6 +17,7 @@ import {
 const router = express.Router();
 
 router.get("/", getProducts);
+router.post("/:id/reviews", protect, createProductReview);
 router.get("/:id", getProductById);
 router.post(
   "/",

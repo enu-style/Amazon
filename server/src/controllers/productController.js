@@ -77,7 +77,7 @@ export const getProducts = async (req, res) => {
     }
 
     const products = await prisma.product.findMany({
-      where,
+      where: { ...where, isActive: true },
       orderBy,
       include: {
         category: true,
@@ -118,7 +118,7 @@ export const getProductById = async (req, res) => {
       },
     });
 
-    if (!product) {
+    if (!product || !product.isActive) {
       return sendError(res, 404, "Product not found.");
     }
 
@@ -146,6 +146,7 @@ export const createProduct = async (req, res) => {
       categoryId,
       images = [],
       slug,
+      isActive = true,
     } = req.body;
 
     const category = await prisma.category.findUnique({
@@ -167,6 +168,7 @@ export const createProduct = async (req, res) => {
         sku,
         brand,
         categoryId,
+        isActive,
         rating: 0,
         reviewCount: 0,
         images: {
@@ -200,7 +202,7 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const payload = req.body;
+    const { images, ...payload } = req.body;
 
     const product = await prisma.product.update({
       where: { id },
@@ -211,6 +213,18 @@ export const updateProduct = async (req, res) => {
           : {}),
         ...(payload.discountPrice !== undefined
           ? { discountPrice: payload.discountPrice || null }
+          : {}),
+        ...(images !== undefined
+          ? {
+              images: {
+                deleteMany: {},
+                create: images.map((url, index) => ({
+                  url,
+                  isPrimary: index === 0,
+                  altText: `${payload.name || "Product"} image ${index + 1}`,
+                })),
+              },
+            }
           : {}),
       },
       include: {
@@ -241,11 +255,17 @@ export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await prisma.product.delete({
+    const product = await prisma.product.update({
       where: { id },
+      data: { isActive: false },
     });
 
-    return sendSuccess(res, 200, {}, "Product deleted successfully.");
+    return sendSuccess(
+      res,
+      200,
+      { product },
+      "Product removed from the storefront.",
+    );
   } catch (error) {
     if (error.code === "P2025") {
       return sendError(res, 404, "Product not found.");
