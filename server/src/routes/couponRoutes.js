@@ -8,19 +8,19 @@ import {
   deleteCoupon,
   getCouponStatistics,
 } from "../controllers/couponController.js";
-import { authenticate, authorizeAdmin } from "../middleware/auth.js";
+import { protect, authorize } from "../middleware/auth.js";
 
 const router = express.Router();
 
 // Customer routes
-router.post("/validate", authenticate, validateCoupon);
+router.post("/validate", protect, validateCoupon);
 
 // Admin routes
-router.get("/", authenticate, authorizeAdmin, getAllCoupons);
-router.get("/:id", authenticate, authorizeAdmin, getCoupon);
-router.get("/:id/statistics", authenticate, authorizeAdmin, getCouponStatistics);
-router.post("/", authenticate, authorizeAdmin, createCoupon);
-router.put("/:id", authenticate, authorizeAdmin, updateCoupon);
-router.delete("/:id", authenticate, authorizeAdmin, deleteCoupon);
+router.get("/", protect, authorize("ADMIN"), getAllCoupons);
+router.get("/:id", protect, authorize("ADMIN"), getCoupon);
+router.get("/:id/statistics", protect, authorize("ADMIN"), getCouponStatistics);
+router.post("/", protect, authorize("ADMIN"), createCoupon);
+router.put("/:id", protect, authorize("ADMIN"), updateCoupon);
+router.delete("/:id", protect, authorize("ADMIN"), deleteCoupon);
 
 export default router;

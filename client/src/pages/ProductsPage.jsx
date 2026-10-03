@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import api from "../services/api";
 
 export default function ProductsPage() {
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("featured");
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get("category") || "all",
+  );
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "featured");
   const [loading, setLoading] = useState(true);
 
   const handleAddToCart = async (product, quantity = 1) => {
@@ -19,6 +22,7 @@ export default function ProductsPage() {
       }
 
       await api.post("/cart/items", { productId: product.id, quantity });
+      window.location.assign("/cart");
     } catch (error) {
       console.error("Failed to add product to cart:", error);
     }
@@ -56,6 +60,12 @@ export default function ProductsPage() {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    setSelectedCategory(searchParams.get("category") || "all");
+    setSearch(searchParams.get("search") || "");
+    setSortBy(searchParams.get("sort") || "featured");
+  }, [searchParams]);
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = search.trim().toLowerCase();

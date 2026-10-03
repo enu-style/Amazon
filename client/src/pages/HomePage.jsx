@@ -24,6 +24,7 @@ export default function HomePage() {
       }
 
       await api.post("/cart/items", { productId: product.id, quantity });
+      window.location.assign("/cart");
     } catch (error) {
       console.error("Failed to add product to cart:", error);
     }

@@ -1,5 +1,8 @@
-import { useSelector } from "react-redux";
-import { NavLink } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { NavLink, useNavigate } from "react-router-dom";
+import api from "../services/api";
+import { logout, setCredentials } from "../store/authSlice";
 
 const navItems = [
   { label: "Home", to: "/" },
@@ -10,7 +13,52 @@ const navItems = [
 ];
 
 export default function Navbar() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user, token } = useSelector((state) => state.auth);
+  const [search, setSearch] = useState("");
+  const [department, setDepartment] = useState("");
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    if (!token) {
+      setCartCount(0);
+      return;
+    }
+
+    const loadNavigationData = async () => {
+      try {
+        const [profileResponse, cartResponse] = await Promise.all([
+          api.get("/auth/me"),
+          api.get("/cart"),
+        ]);
+        const currentUser = profileResponse.data?.data?.user;
+        const cart = cartResponse.data?.data?.cart;
+
+        if (currentUser) {
+          dispatch(setCredentials({ token, user: currentUser }));
+        }
+        setCartCount(cart?.itemCount || 0);
+      } catch (error) {
+        console.error("Failed to load navigation data:", error);
+      }
+    };
+
+    loadNavigationData();
+  }, [dispatch, token]);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login");
+  };
+
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const params = new URLSearchParams();
+    if (search.trim()) params.set("search", search.trim());
+    if (department) params.set("category", department);
+    navigate(`/products${params.size ? `?${params.toString()}` : ""}`);
+  };
 
   return (
     <header className="border-b border-slate-200 bg-white shadow-sm">
@@ -24,25 +72,31 @@ export default function Navbar() {
               ShopSphere
             </NavLink>
             <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 md:flex">
-              <select className="bg-transparent text-sm text-slate-700 outline-none">
-                <option>All Departments</option>
-                <option>Electronics</option>
-                <option>Home</option>
-                <option>Fashion</option>
+              <select
+                value={department}
+                onChange={(event) => setDepartment(event.target.value)}
+                className="bg-transparent text-sm text-slate-700 outline-none"
+              >
+                <option value="">All Departments</option>
+                <option value="electronics">Electronics</option>
+                <option value="home-kitchen">Home & Kitchen</option>
+                <option value="fashion">Fashion</option>
               </select>
             </div>
           </div>
 
-          <div className="hidden flex-1 items-center gap-3 md:flex">
+          <form onSubmit={handleSearch} className="hidden flex-1 items-center gap-3 md:flex">
             <input
               type="text"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
               placeholder="Search products, brands, categories"
               className="w-full rounded-full border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm outline-none ring-0 transition focus:border-orange-400 focus:bg-white"
             />
-            <button className="rounded-full bg-orange-500 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-orange-600">
+            <button type="submit" className="rounded-full bg-orange-500 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-orange-600">
               Search
             </button>
-          </div>
+          </form>
 
           <nav className="hidden items-center gap-5 text-sm text-slate-600 lg:flex">
             {token ? (
@@ -65,8 +119,15 @@ export default function Navbar() {
                   Wishlist
                 </NavLink>
                 <NavLink to="/cart" className="hover:text-slate-900">
-                  Cart (0)
+                  Cart ({cartCount})
                 </NavLink>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="hover:text-slate-900"
+                >
+                  Log out
+                </button>
               </>
             ) : (
               <>
@@ -77,7 +138,7 @@ export default function Navbar() {
                   Register
                 </NavLink>
                 <NavLink to="/cart" className="hover:text-slate-900">
-                  Cart (0)
+                  Cart ({cartCount})
                 </NavLink>
               </>
             )}
