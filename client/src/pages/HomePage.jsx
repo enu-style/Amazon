@@ -16,14 +16,14 @@ export default function HomePage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const handleAddToCart = async (product) => {
+  const handleAddToCart = async (product, quantity = 1) => {
     try {
       if (!localStorage.getItem("shopsphere_token")) {
         window.location.href = "/login";
         return;
       }
 
-      await api.post("/cart/items", { productId: product.id, quantity: 1 });
+      await api.post("/cart/items", { productId: product.id, quantity });
     } catch (error) {
       console.error("Failed to add product to cart:", error);
     }

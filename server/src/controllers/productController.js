@@ -33,7 +33,10 @@ export const getProducts = async (req, res) => {
     if (category) {
       where.category = {
         slug: category,
+        isActive: true,
       };
+    } else {
+      where.category = { isActive: true };
     }
 
     if (minPrice || maxPrice) {
@@ -118,7 +121,7 @@ export const getProductById = async (req, res) => {
       },
     });
 
-    if (!product || !product.isActive) {
+    if (!product || !product.isActive || !product.category.isActive) {
       return sendError(res, 404, "Product not found.");
     }
 

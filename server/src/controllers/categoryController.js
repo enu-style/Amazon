@@ -4,6 +4,7 @@ import { sendSuccess, sendError } from "../utils/response.js";
 export const getCategories = async (_req, res) => {
   try {
     const categories = await prisma.category.findMany({
+      where: { isActive: true },
       orderBy: { name: "asc" },
       include: {
         products: true,
@@ -23,7 +24,7 @@ export const getCategories = async (_req, res) => {
 
 export const createCategory = async (req, res) => {
   try {
-    const { name, slug, description, image } = req.body;
+    const { name, slug, description, image, isActive = true } = req.body;
 
     const category = await prisma.category.create({
       data: {
@@ -36,6 +37,7 @@ export const createCategory = async (req, res) => {
             .replace(/[^a-z0-9-]/g, ""),
         description,
         image,
+        isActive,
       },
     });
 
@@ -98,11 +100,17 @@ export const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await prisma.category.delete({
+    const category = await prisma.category.update({
       where: { id },
+      data: { isActive: false },
     });
 
-    return sendSuccess(res, 200, {}, "Category deleted successfully.");
+    return sendSuccess(
+      res,
+      200,
+      { category },
+      "Category deactivated successfully.",
+    );
   } catch (error) {
     if (error.code === "P2025") {
       return sendError(res, 404, "Category not found.");

@@ -21,10 +21,10 @@ export const protect = async (req, res, next) => {
       where: { id: decoded.id },
     });
 
-    if (!user) {
+    if (!user || !user.isActive) {
       return res.status(401).json({
         success: false,
-        message: "User not found.",
+        message: "Account is unavailable.",
       });
     }
 

@@ -187,7 +187,7 @@ psql -U postgres -c "CREATE DATABASE shopsphere;"
 
 ### 3. Environment Variables
 
-Create `.env` in server directory:
+Create `.env` in the server directory, or use a repository-root `.env` as a fallback. Server-specific values take precedence:
 
 ```
 # Database
@@ -290,7 +290,7 @@ GET    /api/products/search      - Search products
 GET    /api/categories           - List categories
 POST   /api/categories           - Create category (Admin)
 PUT    /api/categories/:id       - Update category (Admin)
-DELETE /api/categories/:id       - Delete category (Admin)
+DELETE /api/categories/:id       - Deactivate category (Admin)
 ```
 
 ### Cart
@@ -343,10 +343,14 @@ DELETE /api/reviews/:id          - Delete review
 ### Admin
 
 ```
+GET    /api/admin/categories     - List all categories, including hidden categories
+GET    /api/admin/users          - Search and page through customer accounts
+PATCH  /api/admin/users/:id/status - Activate or deactivate a customer account
 GET    /api/admin/dashboard      - Dashboard stats
-GET    /api/admin/users          - List all users
 GET    /api/admin/orders         - List all orders
 GET    /api/admin/reviews        - List all reviews
+POST   /api/uploads/products      - Upload up to 8 JPG, PNG, or WebP images (10 MB each)
+
 ```
 
 ## 🧪 Testing

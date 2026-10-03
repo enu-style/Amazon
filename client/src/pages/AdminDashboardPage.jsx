@@ -72,6 +72,18 @@ export default function AdminDashboardPage() {
             Manage products
           </Link>
           <Link
+            to="/admin/categories"
+            className="rounded-md border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            Manage categories
+          </Link>
+          <Link
+            to="/admin/users"
+            className="rounded-md border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            Manage customers
+          </Link>
+          <Link
             to="/admin/orders"
             className="rounded-md border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >

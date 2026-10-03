@@ -29,6 +29,8 @@ export default function AdminProductsPage() {
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [selectedImages, setSelectedImages] = useState([]);
   const [busyProductId, setBusyProductId] = useState(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -38,7 +40,7 @@ export default function AdminProductsPage() {
       try {
         const [productResponse, categoryResponse] = await Promise.all([
           api.get("/admin/products"),
-          api.get("/categories"),
+          api.get("/admin/categories"),
         ]);
         setProducts(productResponse.data?.data?.products || []);
         setCategories(categoryResponse.data?.data?.categories || []);
@@ -71,6 +73,7 @@ export default function AdminProductsPage() {
   const resetDraft = () => {
     setDraft({ ...emptyDraft, categoryId: categories[0]?.id || "" });
     setEditingId(null);
+    setSelectedImages([]);
   };
 
   const editProduct = (product) => {
@@ -111,9 +114,7 @@ export default function AdminProductsPage() {
         .split("\n")
         .map((url) => url.trim())
         .filter(Boolean),
-      ...(editingId
-        ? { isActive: draft.isActive }
-        : { isActive: draft.isActive }),
+      isActive: draft.isActive,
     };
 
     try {
@@ -139,6 +140,42 @@ export default function AdminProductsPage() {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const uploadSelectedImages = async () => {
+    if (!selectedImages.length) return;
+
+    setUploadingImages(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const formData = new FormData();
+      selectedImages.forEach((file) => formData.append("images", file));
+      const response = await api.post("/uploads/products", formData);
+      const uploadedUrls = (response.data?.data?.images || []).map(
+        (image) => image.url,
+      );
+
+      setDraft((current) => ({
+        ...current,
+        images: [...current.images.split("\n"), ...uploadedUrls]
+          .map((url) => url.trim())
+          .filter(Boolean)
+          .join("\n"),
+      }));
+      setSelectedImages([]);
+      setMessage(
+        `${uploadedUrls.length} image${uploadedUrls.length === 1 ? "" : "s"} uploaded.`,
+      );
+    } catch (requestError) {
+      setError(
+        requestError.response?.data?.message ||
+          "Unable to upload selected images.",
+      );
+    } finally {
+      setUploadingImages(false);
     }
   };
 
@@ -187,6 +224,12 @@ export default function AdminProductsPage() {
           className="rounded-md border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
         >
           Manage orders
+        </Link>
+        <Link
+          to="/admin/categories"
+          className="rounded-md border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          Manage categories
         </Link>
       </header>
 
@@ -258,6 +301,7 @@ export default function AdminProductsPage() {
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
+                      {!category.isActive ? " (Hidden)" : ""}
                     </option>
                   ))}
                 </select>
@@ -282,6 +326,31 @@ export default function AdminProductsPage() {
                   required
                   className="rounded-md border border-slate-300 px-3 py-2.5 outline-none focus:border-orange-500"
                 />
+              </label>
+              <label className="grid gap-1.5 text-sm font-medium text-slate-700 sm:col-span-2 lg:col-span-3">
+                Upload product images
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  onChange={(event) =>
+                    setSelectedImages(Array.from(event.target.files || []))
+                  }
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:font-medium"
+                />
+                <span className="text-xs font-normal text-slate-500">
+                  JPG, PNG, or WebP. Up to 8 images, 10 MB each.
+                </span>
+                <button
+                  type="button"
+                  onClick={uploadSelectedImages}
+                  disabled={!selectedImages.length || uploadingImages}
+                  className="w-fit rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {uploadingImages
+                    ? "Uploading..."
+                    : `Upload ${selectedImages.length || "selected"} image${selectedImages.length === 1 ? "" : "s"}`}
+                </button>
               </label>
               <label className="grid gap-1.5 text-sm font-medium text-slate-700 sm:col-span-2 lg:col-span-3">
                 Image URLs

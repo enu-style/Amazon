@@ -10,3 +10,7 @@ export const updateOrderStatusSchema = z.object({
     "CANCELLED",
   ]),
 });
+
+export const updateCustomerStatusSchema = z.object({
+  isActive: z.boolean(),
+});

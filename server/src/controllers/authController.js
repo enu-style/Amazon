@@ -72,6 +72,10 @@ export const login = async (req, res) => {
       return sendError(res, 401, "Invalid email or password.");
     }
 
+    if (!user.isActive) {
+      return sendError(res, 403, "This account has been disabled.");
+    }
+
     const token = signToken(user);
 
     return sendSuccess(

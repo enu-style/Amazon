@@ -113,6 +113,146 @@ export const getAdminProducts = async (_req, res) => {
   }
 };
 
+export const getAdminCategories = async (_req, res) => {
+  try {
+    const categories = await prisma.category.findMany({
+      orderBy: { name: "asc" },
+      include: { _count: { select: { products: true } } },
+    });
+
+    return sendSuccess(
+      res,
+      200,
+      { categories },
+      "Categories retrieved successfully.",
+    );
+  } catch (error) {
+    return sendError(
+      res,
+      500,
+      "Unable to fetch admin categories.",
+      error.message,
+    );
+  }
+};
+
+export const getAdminUsers = async (req, res) => {
+  try {
+    const requestedPage = Number.parseInt(req.query.page, 10);
+    const requestedLimit = Number.parseInt(req.query.limit, 10);
+    const page =
+      Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+    const limit =
+      Number.isInteger(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, 100)
+        : 20;
+    const search =
+      typeof req.query.search === "string"
+        ? req.query.search.trim().slice(0, 100)
+        : "";
+    const where = {
+      role: "CUSTOMER",
+      ...(search
+        ? {
+            OR: [
+              { firstName: { contains: search, mode: "insensitive" } },
+              { lastName: { contains: search, mode: "insensitive" } },
+              { email: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    };
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          isActive: true,
+          createdAt: true,
+          _count: { select: { orders: true } },
+        },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    return sendSuccess(
+      res,
+      200,
+      {
+        users,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      },
+      "Customers retrieved successfully.",
+    );
+  } catch (error) {
+    return sendError(res, 500, "Unable to fetch customers.", error.message);
+  }
+};
+
+export const updateAdminCustomerStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    if (id === req.user.id) {
+      return sendError(res, 409, "You cannot change your own account status.");
+    }
+
+    const customer = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, isActive: true },
+    });
+
+    if (!customer || customer.role !== "CUSTOMER") {
+      return sendError(res, 404, "Customer not found.");
+    }
+
+    if (customer.isActive === isActive) {
+      return sendSuccess(
+        res,
+        200,
+        { user: { id, isActive } },
+        "Customer status is unchanged.",
+      );
+    }
+
+    const updated = await prisma.user.updateMany({
+      where: { id, role: "CUSTOMER", isActive: customer.isActive },
+      data: { isActive },
+    });
+
+    if (updated.count === 0) {
+      return sendError(
+        res,
+        409,
+        "Customer status changed; refresh and try again.",
+      );
+    }
+
+    return sendSuccess(
+      res,
+      200,
+      { user: { id, isActive } },
+      isActive
+        ? "Customer account activated."
+        : "Customer account deactivated.",
+    );
+  } catch (error) {
+    return sendError(
+      res,
+      500,
+      "Unable to update customer status.",
+      error.message,
+    );
+  }
+};
+
 export const getAdminOrders = async (req, res) => {
   try {
     const requestedPage = Number.parseInt(req.query.page, 10);

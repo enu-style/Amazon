@@ -1,8 +1,11 @@
+import { useState } from "react";
+
 export default function ProductCard({
   product,
   onAddToCart,
   onToggleWishlist,
 }) {
+  const [quantity, setQuantity] = useState(1);
   const image =
     product?.images?.[0]?.url ||
     "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80";
@@ -14,11 +17,18 @@ export default function ProductCard({
   const savings = discountPrice
     ? Math.max(0, Math.round(((price - discountPrice) / price) * 100))
     : 0;
+  const stock = Math.max(0, Number(product?.stock ?? 0));
 
   const handleAddToCart = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    onAddToCart?.(product);
+    onAddToCart?.(product, quantity);
+  };
+
+  const changeQuantity = (event, amount) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setQuantity((current) => Math.min(stock, Math.max(1, current + amount)));
   };
 
   const handleToggleWishlist = (event) => {
@@ -71,6 +81,36 @@ export default function ProductCard({
           )}
         </div>
 
+        <div className="flex items-center justify-between text-sm text-slate-600">
+          <span>Quantity</span>
+          <div className="inline-flex h-9 items-center overflow-hidden rounded-md border border-slate-300">
+            <button
+              type="button"
+              onClick={(event) => changeQuantity(event, -1)}
+              disabled={quantity <= 1 || stock === 0}
+              aria-label={`Decrease ${product?.name || "product"} quantity`}
+              className="h-full w-9 text-base font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
+            >
+              -
+            </button>
+            <output
+              aria-label="Selected quantity"
+              className="min-w-9 text-center font-medium text-slate-900"
+            >
+              {quantity}
+            </output>
+            <button
+              type="button"
+              onClick={(event) => changeQuantity(event, 1)}
+              disabled={quantity >= stock || stock === 0}
+              aria-label={`Increase ${product?.name || "product"} quantity`}
+              className="h-full w-9 text-base font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between text-sm text-slate-500">
           <span>{product?.reviewCount ?? 120} reviews</span>
           <span>
@@ -81,9 +121,10 @@ export default function ProductCard({
         <button
           type="button"
           onClick={handleAddToCart}
-          className="w-full rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
+          disabled={stock === 0}
+          className="w-full rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
-          Add to cart
+          {stock === 0 ? "Out of stock" : "Add to cart"}
         </button>
       </div>
     </article>
