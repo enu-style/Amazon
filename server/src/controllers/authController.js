@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
 import { sendSuccess, sendError } from "../utils/response.js";
+import { sendWelcomeEmail } from "../services/emailService.js";
 
 const signToken = (user) =>
   jwt.sign(
@@ -34,6 +35,13 @@ export const register = async (req, res) => {
     });
 
     const token = signToken(user);
+
+    // Send welcome email (non-blocking)
+    if (user.emailNotifications) {
+      sendWelcomeEmail(user).catch((error) => {
+        console.error("Failed to send welcome email:", error);
+      });
+    }
 
     return sendSuccess(
       res,
@@ -111,6 +119,8 @@ export const getMe = async (req, res) => {
           email: req.user.email,
           phone: req.user.phone,
           role: req.user.role,
+          emailNotifications: req.user.emailNotifications,
+          marketingEmails: req.user.marketingEmails,
         },
       },
       "Profile loaded.",

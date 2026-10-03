@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma.js";
 import { sendSuccess, sendError } from "../utils/response.js";
+import { sendOrderConfirmationEmail } from "../services/emailService.js";
 
 const getUnitPrice = (product) => {
   if (product.discountPrice && Number(product.discountPrice) > 0) {
@@ -25,6 +26,13 @@ export const getOrders = async (req, res) => {
           },
         },
         shippingAddress: true,
+        coupon: {
+          select: {
+            code: true,
+            type: true,
+            discountValue: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -54,6 +62,14 @@ export const getOrderById = async (req, res) => {
           },
         },
         shippingAddress: true,
+        coupon: {
+          select: {
+            code: true,
+            type: true,
+            discountValue: true,
+            description: true,
+          },
+        },
       },
     });
 
@@ -74,7 +90,7 @@ export const getOrderById = async (req, res) => {
 export const createOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { shippingAddressId, notes, shippingAddress } = req.body;
+    const { shippingAddressId, notes, shippingAddress, couponCode } = req.body;
 
     const cart = await prisma.cart.findUnique({
       where: { userId },
@@ -103,14 +119,88 @@ export const createOrder = async (req, res) => {
       }
     }
 
+    // Calculate subtotal
     const subtotal = cart.items.reduce((sum, item) => {
       const unitPrice = getUnitPrice(item.product);
       return sum + unitPrice * item.quantity;
     }, 0);
 
-    const shippingFee = subtotal > 0 ? 12 : 0;
-    const tax = subtotal * 0.08;
-    const total = subtotal + shippingFee + tax;
+    let shippingFee = subtotal > 0 ? 12 : 0;
+    let discount = 0;
+    let coupon = null;
+    let appliedCouponId = null;
+
+    // Apply coupon if provided
+    if (couponCode) {
+      coupon = await prisma.coupon.findUnique({
+        where: { code: couponCode.toUpperCase() },
+      });
+
+      if (!coupon) {
+        return sendError(res, 404, "Invalid coupon code.");
+      }
+
+      // Validate coupon
+      const now = new Date();
+      
+      if (coupon.status !== 'ACTIVE') {
+        return sendError(res, 400, "This coupon is no longer active.");
+      }
+
+      if (coupon.validUntil && new Date(coupon.validUntil) < now) {
+        return sendError(res, 400, "This coupon has expired.");
+      }
+
+      if (new Date(coupon.validFrom) > now) {
+        return sendError(res, 400, "This coupon is not yet valid.");
+      }
+
+      if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+        return sendError(res, 400, "This coupon has reached its usage limit.");
+      }
+
+      // Check per-user usage
+      const userUsageCount = await prisma.couponUsage.count({
+        where: {
+          couponId: coupon.id,
+          userId,
+        },
+      });
+
+      if (userUsageCount >= coupon.usagePerUser) {
+        return sendError(res, 400, "You have already used this coupon the maximum number of times.");
+      }
+
+      // Check minimum order amount
+      if (coupon.minOrderAmount && subtotal < parseFloat(coupon.minOrderAmount)) {
+        return sendError(
+          res,
+          400,
+          `Minimum order amount of $${parseFloat(coupon.minOrderAmount).toFixed(2)} required for this coupon.`
+        );
+      }
+
+      // Calculate discount
+      if (coupon.type === 'PERCENTAGE') {
+        discount = (subtotal * parseFloat(coupon.discountValue)) / 100;
+        if (coupon.maxDiscount && discount > parseFloat(coupon.maxDiscount)) {
+          discount = parseFloat(coupon.maxDiscount);
+        }
+      } else if (coupon.type === 'FIXED_AMOUNT') {
+        discount = parseFloat(coupon.discountValue);
+        if (discount > subtotal) {
+          discount = subtotal;
+        }
+      } else if (coupon.type === 'FREE_SHIPPING') {
+        discount = shippingFee;
+        shippingFee = 0;
+      }
+
+      appliedCouponId = coupon.id;
+    }
+
+    const tax = (subtotal - discount) * 0.08;
+    const total = subtotal - discount + shippingFee + tax;
 
     const order = await prisma.$transaction(async (tx) => {
       let shippingAddressRecord = address;
@@ -141,12 +231,13 @@ export const createOrder = async (req, res) => {
         data: {
           userId,
           shippingAddressId: shippingAddressRecord?.id || null,
+          couponId: appliedCouponId,
           status: "PENDING",
           paymentStatus: "PENDING",
           subtotal: Number(subtotal.toFixed(2)),
           shippingFee: Number(shippingFee.toFixed(2)),
           tax: Number(tax.toFixed(2)),
-          discount: 0,
+          discount: Number(discount.toFixed(2)),
           total: Number(total.toFixed(2)),
           notes: notes || null,
           items: {
@@ -171,8 +262,31 @@ export const createOrder = async (req, res) => {
             include: { product: { include: { images: true } } },
           },
           shippingAddress: true,
+          coupon: {
+            select: {
+              code: true,
+              type: true,
+              discountValue: true,
+            },
+          },
         },
       });
+
+      // Update coupon usage
+      if (appliedCouponId) {
+        await tx.coupon.update({
+          where: { id: appliedCouponId },
+          data: { usedCount: { increment: 1 } },
+        });
+
+        await tx.couponUsage.create({
+          data: {
+            couponId: appliedCouponId,
+            userId,
+            orderId: createdOrder.id,
+          },
+        });
+      }
 
       await tx.cartItem.deleteMany({
         where: { cartId: cart.id },
@@ -180,6 +294,13 @@ export const createOrder = async (req, res) => {
 
       return createdOrder;
     });
+
+    // Send order confirmation email (non-blocking)
+    if (req.user.emailNotifications) {
+      sendOrderConfirmationEmail(order, req.user).catch((error) => {
+        console.error("Failed to send order confirmation email:", error);
+      });
+    }
 
     return sendSuccess(res, 201, { order }, "Order placed successfully.");
   } catch (error) {

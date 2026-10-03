@@ -34,6 +34,18 @@ enum ReviewStatus {
   REJECTED
 }
 
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+enum CouponStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -44,6 +56,11 @@ model User {
   avatar       String?
   role         Role     @default(CUSTOMER)
   isActive     Boolean  @default(true)
+  
+  // Email preferences
+  emailNotifications Boolean @default(true)
+  marketingEmails    Boolean @default(false)
+  
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -53,6 +70,7 @@ model User {
   addresses Address[]
   orders    Order[]
   reviews   Review[]
+  coupons   Coupon[]  // Coupons created by admin
 
   @@index([role])
   @@index([email])
@@ -201,6 +219,7 @@ model Order {
   id                String        @id @default(cuid())
   userId            String
   shippingAddressId String?
+  couponId          String?       // Applied coupon
   status            OrderStatus   @default(PENDING)
   paymentStatus     PaymentStatus @default(PENDING)
   stripePaymentId   String?
@@ -216,9 +235,11 @@ model Order {
   // Relations
   user            User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   shippingAddress Address?    @relation(fields: [shippingAddressId], references: [id], onDelete: SetNull)
+  coupon          Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
   items           OrderItem[]
 
   @@index([userId])
+  @@index([couponId])
   @@index([status])
   @@index([paymentStatus])
   @@index([createdAt])
@@ -262,4 +283,48 @@ model Review {
   @@index([productId])
   @@index([rating])
   @@index([status])
+}
+
+// Coupon Model
+model Coupon {
+  id              String       @id @default(cuid())
+  code            String       @unique
+  description     String?
+  type            CouponType
+  discountValue   Decimal      @db.Decimal(10, 2) // Percentage (e.g., 20.00) or amount (e.g., 10.00)
+  minOrderAmount  Decimal?     @db.Decimal(10, 2) // Minimum order to apply
+  maxDiscount     Decimal?     @db.Decimal(10, 2) // Max discount for percentage coupons
+  usageLimit      Int?         // Total usage limit across all users
+  usagePerUser    Int          @default(1) // How many times one user can use
+  usedCount       Int          @default(0) // Times this coupon has been used
+  status          CouponStatus @default(ACTIVE)
+  validFrom       DateTime     @default(now())
+  validUntil      DateTime?
+  createdById     String       // Admin who created it
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  createdBy User    @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  orders    Order[]
+  usages    CouponUsage[]
+
+  @@index([code])
+  @@index([status])
+  @@index([validUntil])
+}
+
+// Track individual coupon usages
+model CouponUsage {
+  id        String   @id @default(cuid())
+  couponId  String
+  userId    String
+  orderId   String?
+  usedAt    DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([userId])
+  @@index([orderId])
 }

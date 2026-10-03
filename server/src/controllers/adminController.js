@@ -5,6 +5,7 @@ import {
   canTransitionOrderStatus,
   getAllowedOrderStatuses,
 } from "../utils/adminOrderStatus.js";
+import { sendOrderShippedEmail, sendOrderDeliveredEmail } from "../services/emailService.js";
 
 const orderStatuses = [
   "PENDING",
@@ -327,10 +328,13 @@ export const getAdminOrders = async (req, res) => {
 export const updateAdminOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, trackingNumber } = req.body;
     const currentOrder = await prisma.order.findUnique({
       where: { id },
-      select: { status: true },
+      select: { 
+        status: true,
+        userId: true,
+      },
     });
 
     if (!currentOrder) {
@@ -360,13 +364,48 @@ export const updateAdminOrderStatus = async (req, res) => {
 
     const order = await prisma.order.findUnique({
       where: { id },
-      select: { id: true, status: true },
+      select: { 
+        id: true, 
+        status: true,
+        items: {
+          include: {
+            product: {
+              include: {
+                images: true,
+              },
+            },
+          },
+        },
+        shippingAddress: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            emailNotifications: true,
+          },
+        },
+      },
     });
+
+    // Send email notifications based on status change
+    if (order.user.emailNotifications) {
+      if (status === 'SHIPPED') {
+        sendOrderShippedEmail(order, order.user, trackingNumber).catch((error) => {
+          console.error("Failed to send shipped email:", error);
+        });
+      } else if (status === 'DELIVERED') {
+        sendOrderDeliveredEmail(order, order.user).catch((error) => {
+          console.error("Failed to send delivered email:", error);
+        });
+      }
+    }
 
     return sendSuccess(
       res,
       200,
-      { order, allowedStatuses: getAllowedOrderStatuses(order.status) },
+      { order: { id: order.id, status: order.status }, allowedStatuses: getAllowedOrderStatuses(order.status) },
       "Order status updated successfully.",
     );
   } catch (error) {

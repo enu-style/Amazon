@@ -525,3 +525,7 @@ Built as a demonstration of full-stack e-commerce development.
 ---
 
 **Let's build ShopSphere! 🚀**
+
+
+<!-- Admin: admin@shopsphere.com / Admin123!
+Customer: customer@shopsphere.com / Customer123! -->
