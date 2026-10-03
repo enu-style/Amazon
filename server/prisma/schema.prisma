@@ -28,18 +28,24 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
+  id           String   @id @default(cuid())
+  email        String   @unique
   passwordHash String
   firstName    String
   lastName     String
   phone        String?
   avatar       String?
-  role         Role      @default(CUSTOMER)
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  role         Role     @default(CUSTOMER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
   cart      Cart?
@@ -53,14 +59,14 @@ model User {
 }
 
 model Category {
-  id          String    @id @default(cuid())
-  name        String    @unique
-  slug        String    @unique
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
   description String?
   image       String?
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relations
   products Product[]
@@ -69,22 +75,22 @@ model Category {
 }
 
 model Product {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   name          String
-  slug          String    @unique
+  slug          String   @unique
   description   String
-  price         Decimal   @db.Decimal(10, 2)
-  discountPrice Decimal?  @db.Decimal(10, 2)
-  stock         Int       @default(0)
-  sku           String    @unique
+  price         Decimal  @db.Decimal(10, 2)
+  discountPrice Decimal? @db.Decimal(10, 2)
+  stock         Int      @default(0)
+  sku           String   @unique
   brand         String
-  isActive      Boolean   @default(true)
+  isActive      Boolean  @default(true)
   categoryId    String
-  rating        Float     @default(0)
-  reviewCount   Int       @default(0)
-  soldCount     Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  rating        Float    @default(0)
+  reviewCount   Int      @default(0)
+  soldCount     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relations
   category      Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
@@ -113,10 +119,10 @@ model ProductImage {
 }
 
 model Cart {
-  id        String     @id @default(cuid())
-  userId    String     @unique
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -143,10 +149,10 @@ model CartItem {
 }
 
 model Wishlist {
-  id        String         @id @default(cuid())
-  userId    String         @unique
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -156,12 +162,12 @@ model Wishlist {
 }
 
 model WishlistItem {
-  id         String    @id @default(cuid())
+  id         String   @id @default(cuid())
   wishlistId String
-  wishlist   Wishlist  @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
   productId  String
-  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  createdAt  DateTime  @default(now())
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
 
   @@unique([wishlistId, productId])
   @@index([wishlistId])
@@ -199,17 +205,17 @@ model Order {
   paymentStatus     PaymentStatus @default(PENDING)
   stripePaymentId   String?
   subtotal          Decimal       @db.Decimal(10, 2)
-  shippingFee       Decimal       @db.Decimal(10, 2) @default(0)
-  tax               Decimal       @db.Decimal(10, 2) @default(0)
-  discount          Decimal       @db.Decimal(10, 2) @default(0)
+  shippingFee       Decimal       @default(0) @db.Decimal(10, 2)
+  tax               Decimal       @default(0) @db.Decimal(10, 2)
+  discount          Decimal       @default(0) @db.Decimal(10, 2)
   total             Decimal       @db.Decimal(10, 2)
   notes             String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
   // Relations
-  user            User       @relation(fields: [userId], references: [id], onDelete: Restrict)
-  shippingAddress Address?   @relation(fields: [shippingAddressId], references: [id], onDelete: SetNull)
+  user            User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  shippingAddress Address?    @relation(fields: [shippingAddressId], references: [id], onDelete: SetNull)
   items           OrderItem[]
 
   @@index([userId])
@@ -224,7 +230,7 @@ model OrderItem {
   productId String
   quantity  Int
   price     Decimal  @db.Decimal(10, 2)
-  discount  Decimal  @db.Decimal(10, 2) @default(0)
+  discount  Decimal  @default(0) @db.Decimal(10, 2)
   createdAt DateTime @default(now())
 
   // Relations
@@ -237,15 +243,16 @@ model OrderItem {
 
 // Review Model
 model Review {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   userId    String
   productId String
-  rating    Int      @db.SmallInt
+  rating    Int          @db.SmallInt
   title     String?
   comment   String
-  helpful   Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status    ReviewStatus @default(APPROVED)
+  helpful   Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   // Relations
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -254,4 +261,5 @@ model Review {
   @@unique([userId, productId])
   @@index([productId])
   @@index([rating])
+  @@index([status])
 }

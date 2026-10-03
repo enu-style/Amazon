@@ -17,3 +17,10 @@ export const calculateReviewSummary = (reviews = []) => {
     reviewCount: reviews.length,
   };
 };
+
+export const calculateModeratedReviewSummary = (reviews = []) =>
+  calculateReviewSummary(
+    Array.isArray(reviews)
+      ? reviews.filter((review) => review.status === "APPROVED")
+      : [],
+  );
