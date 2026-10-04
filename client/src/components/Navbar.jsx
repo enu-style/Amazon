@@ -61,15 +61,18 @@ export default function Navbar() {
   };
 
   return (
-    <header className="border-b border-slate-200 bg-white shadow-sm">
+    <header className="border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+      <div className="bg-slate-950 px-4 py-2 text-center text-xs font-medium text-slate-100">
+        Free delivery on orders over $50 <span className="mx-2 text-orange-400">•</span> New customer savings available
+      </div>
       <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-4">
             <NavLink
               to="/"
-              className="text-2xl font-black tracking-tight text-orange-500"
+              className="text-2xl font-black tracking-tight text-slate-950"
             >
-              ShopSphere
+              Shop<span className="text-orange-500">Sphere</span>
             </NavLink>
             <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 md:flex">
               <select
@@ -85,20 +88,20 @@ export default function Navbar() {
             </div>
           </div>
 
-          <form onSubmit={handleSearch} className="hidden flex-1 items-center gap-3 md:flex">
+          <form onSubmit={handleSearch} className="hidden flex-1 items-center gap-2 md:flex">
             <input
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search products, brands, categories"
-              className="w-full rounded-full border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm outline-none ring-0 transition focus:border-orange-400 focus:bg-white"
+              className="w-full rounded-full border border-slate-200 bg-slate-100 px-5 py-2.5 text-sm outline-none ring-0 transition focus:border-orange-400 focus:bg-white focus:shadow-[0_0_0_4px_rgba(251,146,60,0.12)]"
             />
-            <button type="submit" className="rounded-full bg-orange-500 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-orange-600">
+            <button type="submit" className="rounded-full bg-orange-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-orange-200 transition hover:-translate-y-0.5 hover:bg-orange-600">
               Search
             </button>
           </form>
 
-          <nav className="hidden items-center gap-5 text-sm text-slate-600 lg:flex">
+          <nav className="hidden items-center gap-4 text-sm text-slate-600 lg:flex">
             {token ? (
               <>
                 <span className="font-medium text-slate-700">
@@ -118,8 +121,8 @@ export default function Navbar() {
                 <NavLink to="/wishlist" className="hover:text-slate-900">
                   Wishlist
                 </NavLink>
-                <NavLink to="/cart" className="hover:text-slate-900">
-                  Cart ({cartCount})
+                <NavLink to="/cart" className="rounded-full bg-slate-100 px-3 py-2 font-semibold text-slate-900 transition hover:bg-orange-100">
+                  Cart · {cartCount}
                 </NavLink>
                 <button
                   type="button"
@@ -137,8 +140,8 @@ export default function Navbar() {
                 <NavLink to="/register" className="hover:text-slate-900">
                   Register
                 </NavLink>
-                <NavLink to="/cart" className="hover:text-slate-900">
-                  Cart ({cartCount})
+                <NavLink to="/cart" className="rounded-full bg-slate-100 px-3 py-2 font-semibold text-slate-900 transition hover:bg-orange-100">
+                  Cart · {cartCount}
                 </NavLink>
               </>
             )}
@@ -149,7 +152,7 @@ export default function Navbar() {
           </button>
         </div>
 
-        <nav className="mt-4 hidden flex-wrap items-center gap-4 border-t border-slate-200 pt-3 text-sm text-slate-600 md:flex">
+        <nav className="mt-4 hidden flex-wrap items-center gap-5 border-t border-slate-100 pt-3 text-sm font-medium text-slate-600 md:flex">
           {navItems.map((item) => (
             <NavLink
               key={item.to}

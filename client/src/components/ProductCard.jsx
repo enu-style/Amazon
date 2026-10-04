@@ -38,40 +38,40 @@ export default function ProductCard({
   };
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg">
-      <div className="relative">
+    <article className="group overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-[0_12px_35px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-2 hover:shadow-[0_20px_45px_rgba(15,23,42,0.15)]">
+      <div className="relative overflow-hidden bg-slate-100">
         <img
           src={image}
           alt={product?.name || "Product image"}
-          className="h-56 w-full object-cover transition duration-300 group-hover:scale-105"
+          className="h-60 w-full object-cover transition duration-500 group-hover:scale-110"
         />
         <button
           type="button"
           onClick={handleToggleWishlist}
-          className="absolute right-3 top-3 rounded-full bg-white/90 p-2 text-lg shadow-sm transition hover:scale-105"
+          className="absolute right-3 top-3 rounded-full bg-white/95 p-2 text-lg shadow-md transition hover:scale-110 hover:text-rose-500"
           aria-label="Add to wishlist"
         >
           ♡
         </button>
         {savings > 0 && (
-          <span className="absolute left-3 top-3 rounded-full bg-orange-500 px-2 py-1 text-xs font-semibold text-white">
-            -{savings}%
+          <span className="absolute left-3 top-3 rounded-full bg-slate-950 px-3 py-1.5 text-xs font-bold text-white shadow-md">
+            Save {savings}%
           </span>
         )}
       </div>
 
-      <div className="space-y-3 p-4">
-        <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
+      <div className="space-y-3 p-5">
+        <div className="flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
           <span>{product?.brand || "ShopSphere"}</span>
-          <span>★★★★★ {product?.rating ?? 4.8}</span>
+          <span className="normal-case tracking-normal text-amber-500">★ {product?.rating ?? 4.8}</span>
         </div>
 
-        <h3 className="line-clamp-2 min-h-[48px] text-base font-semibold text-slate-900">
+        <h3 className="line-clamp-2 min-h-[48px] text-base font-bold leading-6 text-slate-900">
           {product?.name}
         </h3>
 
         <div className="flex items-center gap-2">
-          <span className="text-xl font-bold text-slate-900">
+            <span className="text-2xl font-black text-slate-950">
             ${discountPrice ?? price}
           </span>
           {discountPrice && (
@@ -81,7 +81,7 @@ export default function ProductCard({
           )}
         </div>
 
-        <div className="flex items-center justify-between text-sm text-slate-600">
+        <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-sm text-slate-600">
           <span>Quantity</span>
           <div className="inline-flex h-9 items-center overflow-hidden rounded-md border border-slate-300">
             <button
@@ -122,7 +122,7 @@ export default function ProductCard({
           type="button"
           onClick={handleAddToCart}
           disabled={stock === 0}
-          className="w-full rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-slate-200 transition hover:bg-orange-500 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           {stock === 0 ? "Out of stock" : "Add to cart"}
         </button>
