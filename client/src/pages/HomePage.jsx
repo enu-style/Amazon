@@ -67,123 +67,130 @@ export default function HomePage() {
   const featuredProducts = products.slice(0, 4);
 
   return (
-    <div className="space-y-14">
+    <div className="space-y-16">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-2xl shadow-slate-300">
-        <img
-          src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1800&q=85"
-          alt="Colorful shopping bags"
-          className="absolute inset-0 h-full w-full object-cover opacity-50"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-950/20" />
-        <div className="relative grid min-h-[430px] items-center px-7 py-12 sm:px-12 lg:grid-cols-[1.1fr_0.9fr] lg:px-16">
-          <div>
-            <span className="inline-flex rounded-full border border-orange-300/40 bg-orange-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-orange-200">
-              The edit of the week
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-surface-800 via-surface-900 to-surface-950 shadow-2xl shadow-black/30">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-500/10 via-brand-600/5 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-surface-950/80 via-surface-900/30 to-transparent" />
+        <div className="relative grid min-h-[480px] items-center px-7 py-16 sm:px-12 lg:grid-cols-[1.1fr_0.9fr] lg:px-20">
+          <div className="animate-fade-in">
+            <span className="inline-flex rounded-full border border-brand-400/40 bg-brand-500/10 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.2em] text-brand-300">
+              ✨ The edit of the week
             </span>
-            <h1 className="mt-6 max-w-2xl text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-              Make every day feel a little more special.
+            <h1 className="mt-7 max-w-2xl text-4xl font-black leading-[1.1] tracking-tight text-surface-50 sm:text-5xl lg:text-6xl">
+              Make every day feel a little more <span className="gradient-text">special.</span>
             </h1>
-            <p className="mt-5 max-w-xl text-base leading-7 text-slate-200 sm:text-lg">
+            <p className="mt-6 max-w-xl text-base leading-8 text-surface-300 sm:text-lg">
               Thoughtful finds for home, work, and everything in between—picked to make life easier and better looking.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-10 flex flex-wrap gap-4">
               <Link
                 to="/products"
-                className="rounded-full bg-orange-500 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-950/40 transition hover:-translate-y-0.5 hover:bg-orange-400"
+                className="rounded-full bg-gradient-to-r from-brand-500 to-brand-600 px-7 py-4 text-sm font-bold text-surface-50 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:from-brand-600 hover:to-brand-700 hover:shadow-hover active:scale-95"
               >
-                Shop new arrivals
+                🛍️ Shop new arrivals
               </Link>
               <Link
                 to="/products?sort=price_asc"
-                className="rounded-full border border-white/40 bg-white/10 px-6 py-3.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/20"
+                className="rounded-full border border-surface-600 bg-surface-800/60 px-7 py-4 text-sm font-bold text-surface-200 backdrop-blur transition-all hover:border-brand-500/50 hover:bg-brand-500/10 hover:text-brand-300"
               >
-                Browse all deals
+                🔥 Browse all deals
               </Link>
             </div>
           </div>
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:mt-0">
-            <div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-md">
-              <p className="text-3xl font-black text-orange-300">50%</p>
-              <p className="mt-1 text-sm font-semibold">off selected favorites</p>
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:mt-0">
+            <div className="glass animate-slide-up rounded-2xl border border-surface-700 p-6">
+              <p className="text-4xl font-black text-brand-400">50%</p>
+              <p className="mt-2 text-sm font-semibold text-surface-300">off selected favorites</p>
             </div>
-            <div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-md">
-              <p className="text-3xl font-black text-orange-300">24h</p>
-              <p className="mt-1 text-sm font-semibold">fast order processing</p>
+            <div className="glass animate-slide-up rounded-2xl border border-surface-700 p-6 delay-100">
+              <p className="text-4xl font-black text-brand-400">24h</p>
+              <p className="mt-2 text-sm font-semibold text-surface-300">fast order processing</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Feature strips */}
-      <section className="grid gap-4 sm:grid-cols-3">
+      <section className="grid gap-5 sm:grid-cols-3">
         {[
-          ["✦", "Curated finds", "Products chosen for everyday usefulness."],
-          ["↗", "Quick dispatch", "Clear order updates from checkout to delivery."],
-          ["♡", "Easy returns", "Shop with confidence and simple support."],
-        ].map(([icon, title, text]) => (
-          <div key={title} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-            <span className="text-xl text-orange-500">{icon}</span>
-            <h2 className="mt-3 font-bold text-slate-950">{title}</h2>
-            <p className="mt-1 text-sm leading-6 text-slate-500">{text}</p>
+          ["✨", "Curated finds", "Products chosen for everyday usefulness."],
+          ["⚡", "Quick dispatch", "Clear order updates from checkout to delivery."],
+          ["💝", "Easy returns", "Shop with confidence and simple support."],
+        ].map(([icon, title, text], index) => (
+          <div 
+            key={title} 
+            className="glass animate-fade-in rounded-2xl border border-surface-800 p-6 shadow-card transition-all hover:-translate-y-1 hover:border-brand-500/30 hover:shadow-hover"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <span className="text-2xl text-brand-400">{icon}</span>
+            <h2 className="mt-4 font-bold text-surface-100">{title}</h2>
+            <p className="mt-2 text-sm leading-6 text-surface-400">{text}</p>
           </div>
         ))}
       </section>
 
       {/* Categories */}
-      <section>
-        <div className="mb-5 flex items-center justify-between">
+      <section className="animate-fade-in">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-orange-600">Shop by mood</p>
-            <h2 className="mt-1 text-3xl font-black tracking-tight text-slate-950">
-              Find your next favorite
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-400">Shop by mood</p>
+            <h2 className="mt-2 text-3xl font-black tracking-tight text-surface-50">
+              Find your next <span className="gradient-text">favorite</span>
             </h2>
           </div>
-          <Link to="/products" className="text-sm font-medium text-orange-600">
-            View all
+          <Link 
+            to="/products" 
+            className="rounded-lg border border-surface-700 bg-surface-800/60 px-4 py-2.5 text-sm font-medium text-surface-300 transition-all hover:border-brand-500/50 hover:bg-brand-500/10 hover:text-brand-300"
+          >
+            View all →
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
           {categories.map((category, index) => (
             <div
               key={category.slug || `category-${index}`}
-              className="group rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-lg"
+              className="group glass animate-slide-up rounded-2xl border border-surface-800 p-5 shadow-card transition-all duration-300 hover:-translate-y-2 hover:border-brand-500/40 hover:shadow-hover"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-              <div className="mb-4 inline-flex rounded-2xl bg-orange-50 p-3 text-3xl transition group-hover:scale-110">
+              <div className="mb-5 inline-flex rounded-2xl bg-gradient-to-br from-brand-500/20 to-brand-600/10 p-3.5 text-4xl transition-transform duration-300 group-hover:scale-110">
                 {category.icon || "🛍️"}
               </div>
-              <h3 className="font-bold text-slate-900">{category.name}</h3>
-              <p className="mt-1 text-xs font-semibold text-orange-600">Shop collection →</p>
+              <h3 className="font-bold text-surface-100">{category.name}</h3>
+              <p className="mt-2 text-xs font-semibold text-brand-400">Shop collection →</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Featured products */}
-      <section>
-        <div className="mb-5 flex items-center justify-between">
+      <section className="animate-fade-in">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-orange-600">Trending now</p>
-            <h2 className="mt-1 text-3xl font-black tracking-tight text-slate-950">
-              Customer favorites
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-400">Trending now</p>
+            <h2 className="mt-2 text-3xl font-black tracking-tight text-surface-50">
+              Customer <span className="gradient-text">favorites</span>
             </h2>
           </div>
-          <Link to="/products" className="text-sm font-medium text-orange-600">
-            Browse all
+          <Link 
+            to="/products" 
+            className="rounded-lg border border-surface-700 bg-surface-800/60 px-4 py-2.5 text-sm font-medium text-surface-300 transition-all hover:border-brand-500/50 hover:bg-brand-500/10 hover:text-brand-300"
+          >
+            Browse all →
           </Link>
         </div>
 
         {loading ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[...Array(4)].map((_, index) => (
               <div
                 key={index}
-                className="h-80 animate-pulse rounded-2xl bg-slate-200"
+                className="h-80 animate-pulse rounded-2xl bg-gradient-to-br from-surface-800 to-surface-900"
               />
             ))}
           </div>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {featuredProducts.map((product) => (
               <Link key={product.id} to={`/products/${product.id}`}>
                 <ProductCard
